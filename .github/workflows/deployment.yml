@@ -1,19 +1,10 @@
 name: Deploy project
-on: push
+on: 
+  push:
+    branches:
+      - "main"
+  workflow_dispatch:
 jobs: 
-  test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: get code
-        uses: actions/checkout@v3
-      - name: install node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-      - name: install dependencies
-        run: npm ci
-      - name: test
-        run: npm run test
   lint: 
     runs-on: ubuntu-latest
     steps:
@@ -22,13 +13,27 @@ jobs:
       - name: install node
         uses: actions/setup-node@v3
         with:
-          node-version: 18
+          node-version: 18.x
       - name: install dependencies
         run: npm ci
       - name: lint
         run: npm run lint
+  test:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    steps:
+      - name: get code
+        uses: actions/checkout@v3
+      - name: install node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18.x
+      - name: install dependencies
+        run: npm ci
+      - name: test
+        run: npm run test
   deploy:
-    needs: [test, lint]
+    needs: [test]
     runs-on: ubuntu-latest
     steps:
       - name: get code
@@ -39,6 +44,8 @@ jobs:
           node-version: 18
       - name: install dependencies
         run: npm ci
+      - name: build
+        run: npm run build
       - name: deploy
-        run: echo "deploying to ${{ github.respository }}"
+        run: echo "deploying to ${{ toJson(github.repository) }}"
     
